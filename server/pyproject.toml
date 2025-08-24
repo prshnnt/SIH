@@ -1,0 +1,15 @@
+[project]
+name = "sih"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.0.20",
+    "fastapi>=0.116.1",
+    "langgraph>=0.6.6",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.2",
+    "sentence-transformers>=5.1.0",
+    "sqlalchemy>=2.0.43",
+]
