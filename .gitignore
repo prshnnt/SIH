@@ -5,6 +5,11 @@ build/
 dist/
 wheels/
 *.egg-info
+*.parquet
+*.sqlite3
+*.db
+*.log
+
 
 # Virtual environments
 .venv
