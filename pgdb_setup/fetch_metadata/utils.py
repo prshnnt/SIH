@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 import tempfile
 
 from urllib.parse import urljoin
@@ -61,56 +61,56 @@ class ArgoMetadataExtractor:
             'PLATFORM_TYPE': 'platform_type',
             'FLOAT_SERIAL_NO': 'float_serial_number',
             'FIRMWARE_VERSION': 'firmware_version',
-
+            
             # Deployment information
             'LAUNCH_DATE': 'launch_date',
             'LAUNCH_LONGITUDE': 'launch_longitude',
             'LAUNCH_LATITUDE': 'launch_latitude',
             'DEPLOYMENT_PLATFORM': 'deployment_platform',
             'DEPLOYMENT_CRUISE_ID': 'deployment_cruise_id',
-
+            
             # Configuration
             'LAUNCH_CONFIG_PARAMETER_NAME': 'launch_config_parameters',
             'LAUNCH_CONFIG_PARAMETER_VALUE': 'launch_config_values',
             'CONFIG_PARAMETER_NAME': 'config_parameters',
             'CONFIG_PARAMETER_VALUE': 'config_values',
-
+            
             # Sensors
             'SENSOR': 'sensors',
             'SENSOR_MAKER': 'sensor_makers',
             'SENSOR_MODEL': 'sensor_models',
             'SENSOR_SERIAL_NO': 'sensor_serial_numbers',
-
+            
             # Technical specifications
             'BATTERY_TYPE': 'battery_type',
             'BATTERY_PACKS': 'battery_packs',
             'CONTROLLER_BOARD_TYPE_PRIMARY': 'controller_board_primary',
             'CONTROLLER_BOARD_SERIAL_NO_PRIMARY': 'controller_board_serial_primary',
-
+            
             # Data management
             'DATA_CENTRE': 'data_centre',
             'DC_REFERENCE': 'data_centre_reference',
             'DATA_STATE_INDICATOR': 'data_state_indicator',
             'DATA_MODE': 'data_mode',
             'WMO_INST_TYPE': 'wmo_instrument_type',
-
+            
             # Positioning system
             'POSITIONING_SYSTEM': 'positioning_system',
             'TRANS_SYSTEM': 'transmission_system',
             'TRANS_SYSTEM_ID': 'transmission_system_id',
             'TRANS_FREQUENCY': 'transmission_frequency',
-
+            
             # Dates and status
             'START_DATE': 'start_date',
             'START_DATE_QC': 'start_date_qc',
             'END_MISSION_DATE': 'end_mission_date',
             'END_MISSION_STATUS': 'end_mission_status'
-            }
+        }
 
         # ARGO metadata fields to extract
+        self.metadata_fields_to_extract = list(self.metadata_fields.keys())
 
-
-    def get_float_list(self) -> List[str]:
+    def get_float_list(self) -> List[Tuple[str, str]]:
         """
         Get list of available ARGO floats from the server.
 
@@ -135,52 +135,19 @@ class ArgoMetadataExtractor:
                         if len(parts) > 0:
                             float_wmo = parts[0].strip().split('/')[1]
                             if float_wmo.isdigit():
-                                float_list.append(float_wmo)
+                                float_list.append((float_wmo, parts[0]))
 
                 print(f"Found {len(float_list)} floats")
                 return float_list
             else:
-                print("Could not fetch float index, using alternative method")
-                return self._get_float_list_alternative()
+                print("Could not fetch float index.")
+                return []
 
         except Exception as e:
             print(f"Error getting float list: {e}")
-            return self._get_float_list_alternative()
-
-    def _get_float_list_alternative(self) -> List[str]:
-        """Alternative method to get float list by browsing directory structure."""
-        try:
-            # Browse the dac directory structure
-            dac_url = urljoin(self.base_url, "dac/")
-            response = self.session.get(dac_url, timeout=30)
-
-            float_list = []
-            if response.status_code == 200:
-                # Parse HTML to find DAC directories
-                import re
-                dac_pattern = re.compile(r'href="([^"]+)/"')
-                dacs = dac_pattern.findall(response.text)
-
-                for dac in dacs[:5]:  # Limit to first 5 DACs to avoid overwhelming
-                    if dac in ['..', '.']:
-                        continue
-
-                    dac_dir_url = urljoin(dac_url, f"{dac}/")
-                    dac_response = self.session.get(dac_dir_url, timeout=30)
-
-                    if dac_response.status_code == 200:
-                        float_pattern = re.compile(r'href="(\d{7})/"')
-                        floats = float_pattern.findall(dac_response.text)
-                        float_list.extend(floats)
-
-            print(f"Found {len(float_list)} floats using alternative method")
-            return float_list
-
-        except Exception as e:
-            print(f"Error in alternative float list method: {e}")
-            # Return a few example WMO numbers for testing
-            return ['1900722', '1901393', '5903248', '6901929', '2902746']
-    def save_float_list(self, float_list: List[str], output_file: str = 'float_list.txt'):
+            return []
+        
+    def save_float_list(self, float_list: List[Tuple[str,str]], output_file: str = 'float_list.txt'):
         """
         Save list of float WMO numbers to a text file.
 
@@ -190,11 +157,12 @@ class ArgoMetadataExtractor:
         """
         try:
             with open(output_file, 'w') as f:
-                f.write(','.join(float_list))
+                f.write(','.join([f"{wmo}:{url}" for wmo, url in float_list]))
             print(f"Saved float list to {output_file}")
         except Exception as e:
             print(f"Error saving float list: {e}")
-    def load_float_list(self, input_file: str) -> List[str]:
+
+    def load_float_list(self, input_file: str) -> List[Tuple[str, str]]:
         """
         Load list of float WMO numbers from a text file.
 
@@ -205,13 +173,14 @@ class ArgoMetadataExtractor:
             with open(input_file, 'r') as f:
                 content = f.read().strip()
                 float_list = content.split(',')
+                float_list = [tuple(item.split(':')) for item in float_list if ':' in item]
             print(f"Loaded float list from {input_file}")
             return float_list
         except Exception as e:
             print(f"Error loading float list: {e}")
             return []
 
-    def download_metadata_file(self, wmo_number: str) -> Optional[str]:
+    def download_metadata_file(self, wmo_number: str, url: str) -> Optional[str]:
         """
         Download metadata file for a specific float.
 
@@ -222,15 +191,8 @@ class ArgoMetadataExtractor:
             Path to downloaded file or None if failed
         """
         try:
-            # Find which DAC contains this float
-            dac = self._find_float_dac(wmo_number)
-            if not dac:
-                print(f"Could not find DAC for float {wmo_number}")
-                return None
-
-            # Construct metadata file URL
-            meta_filename = f"{wmo_number}_meta.nc"
-            meta_url = f"{self.base_url}/dac/{dac}/{wmo_number}/{meta_filename}"
+            meta_url = f"{self.base_url}/dac/{url}"
+            print(f"Downloading metadata for {wmo_number} from {meta_url}")
             
 
             response = self.session.get(meta_url, timeout=60)
@@ -252,46 +214,6 @@ class ArgoMetadataExtractor:
         except Exception as e:
             print(f"Error downloading metadata for {wmo_number}: {e}")
             return None
-
-    def _find_float_dac(self, wmo_number: str) -> Optional[str]:
-        """Find which DAC (Data Assembly Center) contains the specified float."""
-        # Common DACs to try first
-        common_dacs = ['coriolis', 'aoml', 'bodc', 'csio', 'csiro', 'incois', 'jma', 'kma', 'kordi', 'meds', 'nmdis']
-
-        for dac in common_dacs:
-            try:
-                test_url = f"{self.base_url}/dac/{dac}/{wmo_number}/"
-                response = self.session.head(test_url, timeout=10)
-                if response.status_code == 200:
-                    return dac
-            except:
-                continue
-
-        # If not found in common DACs, try a broader search
-        try:
-            dac_url = urljoin(self.base_url, "dac/")
-            response = self.session.get(dac_url, timeout=30)
-
-            if response.status_code == 200:
-                import re
-                dac_pattern = re.compile(r'href="([^"]+)/"')
-                all_dacs = dac_pattern.findall(response.text)
-
-                for dac in all_dacs:
-                    if dac in ['..', '.'] or dac in common_dacs:
-                        continue
-
-                    try:
-                        test_url = f"{self.base_url}/dac/{dac}/{wmo_number}/"
-                        response = self.session.head(test_url, timeout=10)
-                        if response.status_code == 200:
-                            return dac
-                    except:
-                        continue
-        except:
-            pass
-
-        return None
 
     def extract_metadata_from_file(self, file_path: str, wmo_number: str) -> Dict:
         """
@@ -408,23 +330,23 @@ class ArgoMetadataExtractor:
         except Exception as e:
             print(f"Error processing sensor data: {e}")
 
-    def extract_multiple_floats(self, wmo_numbers: List[str], output_file: str):
+    def extract_multiple_floats(self, floats: List[Tuple[str, str]], output_file: str):
         """
         Extract metadata for multiple floats and save to Parquet.
 
         Args:
-            wmo_numbers: List of WMO numbers
+            floats: List of tuples containing WMO numbers and their corresponding URLs
             output_file: Output Parquet file path
         """
         all_metadata = []
         failed_extractions = []
 
-        print(f"Extracting metadata for {len(wmo_numbers)} floats")
+        print(f"Extracting metadata for {len(floats)} floats")
 
-        for wmo in tqdm(wmo_numbers, desc="Processing floats"):
+        for wmo, url in tqdm(floats, desc="Processing floats"):
             try:
                 # Download metadata file
-                temp_file = self.download_metadata_file(wmo)
+                temp_file = self.download_metadata_file(wmo, url)
 
                 if temp_file:
                     # Extract metadata
@@ -519,5 +441,3 @@ class ArgoMetadataExtractor:
             print(f"Successfully extracted metadata for float {wmo_number}")
         else:
             print(f"Could not download metadata for float {wmo_number}")
-
-
