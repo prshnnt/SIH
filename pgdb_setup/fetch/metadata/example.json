@@ -1,0 +1,108 @@
+{
+    "wmo": "1900996",
+    "file": "aoml/1900996/1900996_meta.nc",
+    "profiler_type": "851",
+    "institution": "AO",
+    "date_update": "20181020201630",
+    "global_title": "Argo float metadata file",
+    "global_institution": "AOML",
+    "global_source": "Argo float",
+    "global_history": "2018-10-20T20:16:30Z creation",
+    "global_references": "http://www.argodatamgt.org/Documentation",
+    "global_comment": "free text",
+    "global_user_manual_version": "3.1",
+    "global_conventions": "Argo-3.1 CF-1.6",
+    "platform_number": "1900996",
+    "project_name": "US--ARGO--PROJECT",
+    "principal_investigator": "BRECK--OWENS",
+    "platform_type": "SOLO_W",
+    "float_serial_number": "SL900",
+    "firmware_version": "1.10",
+    "launch_date": "20090505124400",
+    "launch_longitude": null,
+    "launch_latitude": null,
+    "deployment_platform": "VOS--Vedette--RODMAN--66",
+    "deployment_cruise_id": "n/a",
+    "launch_config_parameters": [
+        "CONFIG_ParkAndProfileCycleCounter_COUNT",
+        "CONFIG_CycleTime_hours",
+        "CONFIG_DescentToParkTimeOut_hours",
+        "CONFIG_ParkTime_hours",
+        "CONFIG_AscentToSurfaceTimeOut_hours",
+        "CONFIG_SurfaceTimeOut_hours",
+        "CONFIG_TransmissionRepetitionPeriod_seconds",
+        "CONFIG_ParkPressure_dbar",
+        "CONFIG_ProfilePressure_dbar"
+    ],
+    "launch_config_values": [
+        1,
+        240,
+        21,
+        196.99992,
+        21,
+        12,
+        60,
+        1000,
+        1800
+    ],
+    "config_parameters": [
+        "CONFIG_ParkAndProfileCycleCounter_COUNT",
+        "CONFIG_CycleTime_hours",
+        "CONFIG_DescentToParkTimeOut_hours",
+        "CONFIG_ParkTime_hours",
+        "CONFIG_AscentToSurfaceTimeOut_hours",
+        "CONFIG_SurfaceTimeOut_hours",
+        "CONFIG_TransmissionRepetitionPeriod_seconds",
+        "CONFIG_ParkPressure_dbar",
+        "CONFIG_ProfilePressure_dbar"
+    ],
+    "config_values": [
+        [
+            1,
+            240,
+            21,
+            196.99992,
+            21,
+            12,
+            60,
+            1000,
+            1800
+        ]
+    ],
+    "sensors": [
+        "CTD_TEMP",
+        "CTD_CNDC",
+        "CTD_PRES"
+    ],
+    "sensor_makers": [
+        "SBE",
+        "SBE",
+        "DRUCK"
+    ],
+    "sensor_models": [
+        "SBE41CP",
+        "SBE41CP",
+        "DRUCK_2900PSIA"
+    ],
+    "sensor_serial_numbers": [
+        "2118",
+        "2118",
+        "2632614"
+    ],
+    "battery_type": "Lithium",
+    "battery_packs": "n/a",
+    "controller_board_primary": "n/a",
+    "controller_board_serial_primary": "n/a",
+    "data_centre": "AO",
+    "wmo_instrument_type": "851",
+    "positioning_system": "ARGOS",
+    "transmission_system": "ARGOS",
+    "transmission_system_id": "13281",
+    "transmission_frequency": "n/a",
+    "start_date": "20090505130200",
+    "start_date_qc": "1",
+    "end_mission_date": null,
+    "end_mission_status": null,
+    "sensor_details": "[{\"type\": \"CTD_TEMP\", \"maker\": \"SBE\", \"model\": \"SBE41CP\", \"serial_number\": \"2118\"}, {\"type\": \"CTD_CNDC\", \"maker\": \"SBE\", \"model\": \"SBE41CP\", \"serial_number\": \"2118\"}, {\"type\": \"CTD_PRES\", \"maker\": \"DRUCK\", \"model\": \"DRUCK_2900PSIA\", \"serial_number\": \"2632614\"}]",
+    "extraction_date": "2025-10-06T14:52:44.690812"
+}
